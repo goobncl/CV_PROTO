@@ -79,9 +79,11 @@ class MainWindow(QMainWindow):
         self.frames += 1
         self.calculate_fps()
 
-        frame_gray = self.clahe.apply(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)) if self.apply_clahe else cv2.cvtColor(
-            frame, cv2.COLOR_BGR2GRAY)
-        self.display_image(frame_gray)
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if self.apply_clahe:
+            gray_frame = self.clahe.apply(gray_frame)
+
+        self.display_image(gray_frame)
 
     def display_image(self, image):
         height, width = image.shape
