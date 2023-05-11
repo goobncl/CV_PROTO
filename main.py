@@ -1,7 +1,7 @@
 import sys
 import time
 import atexit
-from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstractButton
 from PySide6.QtCore import QTimer, QRect
 from PySide6.QtGui import QImage, QPixmap, QFont, Qt
 from PySide6.QtUiTools import QUiLoader
@@ -25,6 +25,11 @@ class MainWindow(QMainWindow):
         self.ui.setWindowFlags(self.ui.windowFlags() & ~Qt.WindowMaximizeButtonHint)
         self.ui.show()
         self.statusbar = self.ui.statusBar()
+
+        button_list = self.ui.findChildren(QAbstractButton)
+        for button in button_list:
+            button.setEnabled(False)
+
         self.ui.claheBtn.clicked.connect(self.toggle_clahe)
 
     def setup_camera(self):
@@ -43,6 +48,7 @@ class MainWindow(QMainWindow):
         atexit.register(self.cap.release)
 
         self.setting_label.hide()
+        self.ui.claheBtn.setEnabled(True)
 
     def setup_clahe(self):
         self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
@@ -69,7 +75,13 @@ class MainWindow(QMainWindow):
 
     def toggle_clahe(self):
         self.apply_clahe = not self.apply_clahe
-        self.ui.claheBtn.setFont(self.font_bold if self.apply_clahe else self.font_normal)
+
+        if self.apply_clahe:
+            font = self.font_bold
+        else:
+            font = self.font_normal
+
+        self.ui.claheBtn.setFont(font)
 
     def calculate_fps(self):
         now = time.time()
