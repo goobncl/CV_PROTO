@@ -1,35 +1,51 @@
+import sys
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtUiTools import QUiLoader
 import cv2
-import numpy as np
-from ParticleFilter import ParticleFilter
 
 
-def main():
-    cap = cv2.VideoCapture(0)
-    _, frame = cap.read()
-    frame_shape = frame.shape[1::-1]
-    pf = ParticleFilter(1000, frame_shape)
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        loader = QUiLoader()
+        self.ui = loader.load('COMPUTER_VISION.ui', None)
+        self.ui.show()
 
-    while True:
-        _, frame = cap.read()
+        self.cap = cv2.VideoCapture(0)
+        self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
+        self.apply_clahe = False
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_frame)
+        self.timer.start(30)
+
+        self.ui.claheBtn.clicked.connect(self.toggle_clahe)
+
+    def toggle_clahe(self):
+        self.apply_clahe = not self.apply_clahe
+
+    def update_frame(self):
+        ret, frame = self.cap.read()
+        if not ret:
+            return
+
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        _, frame_bin = cv2.threshold(frame_gray, 128, 255, cv2.THRESH_BINARY)
+        if self.apply_clahe:
+            frame_gray = self.clahe.apply(frame_gray)
 
-        moments = cv2.moments(frame_bin)
-        if moments['m00'] > 0:
-            target = np.array([moments['m10'] / moments['m00'], moments['m01'] / moments['m00']])
-            pf.update(target)
+        height, width = frame_gray.shape
+        bytes_per_line = width
+        qimage = QImage(frame_gray.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
+        pixmap = QPixmap.fromImage(qimage)
+        self.ui.videoLabel.setPixmap(pixmap)
 
-        pf.predict()
-        pf.draw(frame)
-
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    def closeEvent(self, event):
+        self.cap.release()
 
 
 if __name__ == '__main__':
-    main()
-
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    sys.exit(app.exec())
