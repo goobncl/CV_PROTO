@@ -6,7 +6,7 @@ import atexit
 import numpy as np
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstractButton
 from PySide6.QtCore import QTimer, QRect
-from PySide6.QtGui import QImage, QPixmap, QFont, Qt, QPen, QPainter
+from PySide6.QtGui import QImage, QPixmap, QFont, Qt, QPen, QPainter, QColor
 from PySide6.QtUiTools import QUiLoader
 from particle_filter import ParticleFilter
 
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
 
     def setup_particle_filter(self):
         self.apply_particle_filter = False
-        self.particle_filter = ParticleFilter(3000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
+        self.particle_filter = ParticleFilter(6000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
 
     def setup_font(self):
         self.font_bold = QFont()
@@ -146,11 +146,12 @@ class MainWindow(QMainWindow):
 
         if self.apply_particle_filter:
             painter = QPainter(pixmap)
-            painter.setPen(QPen(Qt.red, 1))
+            pen = QPen(QColor(255, 0, 40, 30), 1)
+            painter.setPen(pen)
 
             for particle in self.particle_filter.particles:
                 x, y = particle.astype(int)
-                painter.drawEllipse(x, y, 2, 2)
+                painter.drawEllipse(x, y, 1, 1)
 
             painter.end()
 
