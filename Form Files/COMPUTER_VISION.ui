@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>660</width>
+    <width>661</width>
     <height>600</height>
    </rect>
   </property>
@@ -61,24 +61,9 @@
      <string>CLAHE</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="demoBtn">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>500</y>
-      <width>121</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>DEMO</string>
-    </property>
-   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="COMPUTER_VISION.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

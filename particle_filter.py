@@ -4,7 +4,7 @@ import numpy as np
 
 class ParticleFilter:
     def __init__(self, num_particles, frame_shape):
-        # ParticleFilter 클래스 초기화. 입자의 개수와 프레임의 형태를 입력으로 받는다.
+        # 클래스 초기화. 입자의 개수와 프레임의 형태를 입력으로 받는다.
         self.num_particles = num_particles  # 사용할 입자의 수를 저장한다.
         self.particles = np.random.rand(self.num_particles, 2) * frame_shape  # 무작위 위치에 입자를 초기화. 각 입자는 프레임 내의 (x, y) 위치를 나타낸다.
 
@@ -28,4 +28,3 @@ class ParticleFilter:
         # 각 입자의 위치에 원을 그려 프레임에 입자를 그림.
         for particle in self.particles:
             cv2.circle(frame, tuple(particle.astype(int)), 1, (0, 0, 255), -1)  # 각 입자의 위치에 반지름이 1이고 색이 빨간색인 원을 그림.
-
