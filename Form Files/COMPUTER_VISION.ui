@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>COMPUTER_VISION_PROTO</string>
+   <string>CV_PROTO</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">

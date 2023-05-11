@@ -1,9 +1,9 @@
 import sys
 import time
 import atexit
-from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QImage, QPixmap, QFont
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame
+from PySide6.QtCore import QTimer, QRect
+from PySide6.QtGui import QImage, QPixmap, QFont, Qt
 from PySide6.QtUiTools import QUiLoader
 import cv2
 
@@ -21,17 +21,28 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         loader = QUiLoader()
         self.ui = loader.load('./Form Files/COMPUTER_VISION.ui', None)
-        self.ui.show()
         self.ui.setFixedSize(self.ui.size())
+        self.ui.setWindowFlags(self.ui.windowFlags() & ~Qt.WindowMaximizeButtonHint)
+        self.ui.show()
         self.statusbar = self.ui.statusBar()
         self.ui.claheBtn.clicked.connect(self.toggle_clahe)
 
     def setup_camera(self):
+        self.setting_label = QLabel(self.ui.videoLabel)
+        self.setting_label.setGeometry(QRect(0, 0, self.ui.videoLabel.width(), self.ui.videoLabel.height()))  # Adjust position and size of the QLabel
+        self.setting_label.setText("Camera Initialize...")
+        self.setting_label.setAlignment(Qt.AlignCenter)
+        self.setting_label.setFrameStyle(QFrame.NoFrame)
+        self.setting_label.show()
+        QApplication.processEvents()
+
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 10)
         atexit.register(self.cap.release)
+
+        self.setting_label.hide()
 
     def setup_clahe(self):
         self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
