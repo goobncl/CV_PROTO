@@ -1,12 +1,14 @@
+import cv2
 import sys
 import time
 import atexit
+
+import numpy as np
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstractButton
 from PySide6.QtCore import QTimer, QRect
-from PySide6.QtGui import QImage, QPixmap, QFont, Qt
+from PySide6.QtGui import QImage, QPixmap, QFont, Qt, QPen, QColor
 from PySide6.QtUiTools import QUiLoader
 from particle_filter import ParticleFilter
-import cv2
 
 
 class MainWindow(QMainWindow):
@@ -60,6 +62,7 @@ class MainWindow(QMainWindow):
 
     def setup_particle_filter(self):
         self.apply_particle_filter = False
+        self.particle_filter = ParticleFilter(3000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
 
     def setup_font(self):
         self.font_bold = QFont()
@@ -125,8 +128,17 @@ class MainWindow(QMainWindow):
             gray_frame = self.clahe.apply(gray_frame)
 
         if self.apply_particle_filter:
-            ## TODO: Particle Filter Tracking Algorithm apply
-            pass
+            _, binary_frame = cv2.threshold(gray_frame, 128, 255, cv2.THRESH_BINARY)
+            moments = cv2.moments(binary_frame)
+            if moments['m00'] > 0:
+                target = np.array([moments['m10'] / moments['m00'], moments['m01'] / moments['m00']])
+                self.particle_filter.update(target)
+
+            self.particle_filter.predict()
+
+            for particle in self.particle_filter.particles:
+                ## TODO: Draw particles with Qt instead of OpenCV
+                cv2.circle(gray_frame, tuple(particle.astype(int)), 1, 255, -1)
 
         self.display_image(gray_frame)
 
