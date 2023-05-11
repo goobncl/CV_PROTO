@@ -6,7 +6,7 @@ import atexit
 import numpy as np
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstractButton
 from PySide6.QtCore import QTimer, QRect
-from PySide6.QtGui import QImage, QPixmap, QFont, Qt, QPen, QColor
+from PySide6.QtGui import QImage, QPixmap, QFont, Qt, QPen, QPainter
 from PySide6.QtUiTools import QUiLoader
 from particle_filter import ParticleFilter
 
@@ -136,10 +136,6 @@ class MainWindow(QMainWindow):
 
             self.particle_filter.predict()
 
-            for particle in self.particle_filter.particles:
-                ## TODO: Draw particles with Qt instead of OpenCV
-                cv2.circle(gray_frame, tuple(particle.astype(int)), 1, 255, -1)
-
         self.display_image(gray_frame)
 
     def display_image(self, image):
@@ -147,6 +143,17 @@ class MainWindow(QMainWindow):
         bytes_per_line = width
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
         pixmap = QPixmap.fromImage(qimage)
+
+        if self.apply_particle_filter:
+            painter = QPainter(pixmap)
+            painter.setPen(QPen(Qt.red, 1))
+
+            for particle in self.particle_filter.particles:
+                x, y = particle.astype(int)
+                painter.drawEllipse(x, y, 2, 2)
+
+            painter.end()
+
         self.ui.videoLabel.setPixmap(pixmap)
 
     def closeEvent(self, event):
