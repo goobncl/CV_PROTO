@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstra
 from PySide6.QtCore import QTimer, QRect
 from PySide6.QtGui import QImage, QPixmap, QFont, Qt
 from PySide6.QtUiTools import QUiLoader
+from particle_filter import ParticleFilter
 import cv2
 
 
@@ -14,6 +15,7 @@ class MainWindow(QMainWindow):
         self.setup_ui()
         self.setup_camera()
         self.setup_clahe()
+        self.setup_particle_filter()
         self.setup_font()
         self.setup_frame_update_timer()
         self.setup_fps_counter()
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow):
             button.setEnabled(False)
 
         self.ui.claheBtn.clicked.connect(self.toggle_clahe)
+        self.ui.pftrkBtn.clicked.connect(self.toggle_particle_filter)
 
     def setup_camera(self):
         self.setting_label = QLabel(self.ui.videoLabel)
@@ -49,10 +52,14 @@ class MainWindow(QMainWindow):
 
         self.setting_label.hide()
         self.ui.claheBtn.setEnabled(True)
+        self.ui.pftrkBtn.setEnabled(True)
 
     def setup_clahe(self):
         self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
         self.apply_clahe = False
+
+    def setup_particle_filter(self):
+        self.apply_particle_filter = False
 
     def setup_font(self):
         self.font_bold = QFont()
@@ -83,6 +90,16 @@ class MainWindow(QMainWindow):
 
         self.ui.claheBtn.setFont(font)
 
+    def toggle_particle_filter(self):
+        self.apply_particle_filter = not self.apply_particle_filter
+
+        if self.apply_particle_filter:
+            font = self.font_bold
+        else:
+            font = self.font_normal
+
+        self.ui.pftrkBtn.setFont(font)
+
     def calculate_fps(self):
         now = time.time()
         duration = now - self.last_time
@@ -103,8 +120,13 @@ class MainWindow(QMainWindow):
         self.calculate_fps()
 
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
         if self.apply_clahe:
             gray_frame = self.clahe.apply(gray_frame)
+
+        if self.apply_particle_filter:
+            ## TODO: Particle Filter Tracking Algorithm apply
+            pass
 
         self.display_image(gray_frame)
 
