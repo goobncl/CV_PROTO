@@ -1,8 +1,9 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtGui import QFont
 import cv2
 
 
@@ -17,6 +18,11 @@ class MainWindow(QMainWindow):
         self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
         self.apply_clahe = False
 
+        self.font_bold = QFont()
+        self.font_bold.setBold(True)
+        self.font_normal = QFont()
+        self.font_normal.setBold(False)
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(30)
@@ -25,6 +31,10 @@ class MainWindow(QMainWindow):
 
     def toggle_clahe(self):
         self.apply_clahe = not self.apply_clahe
+        if self.apply_clahe:
+            self.ui.claheBtn.setFont(self.font_bold)
+        else:
+            self.ui.claheBtn.setFont(self.font_normal)
 
     def update_frame(self):
         ret, frame = self.cap.read()
