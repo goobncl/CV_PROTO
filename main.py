@@ -2,7 +2,6 @@ import cv2
 import sys
 import time
 import atexit
-
 import numpy as np
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QAbstractButton
 from PySide6.QtCore import QTimer, QRect
@@ -22,6 +21,11 @@ class MainWindow(QMainWindow):
         self.setup_frame_update_timer()
         self.setup_fps_counter()
 
+    def set_button_state(self, state):
+        button_list = self.ui.findChildren(QAbstractButton)
+        for button in button_list:
+            button.setEnabled(state)
+
     def setup_ui(self):
         loader = QUiLoader()
         self.ui = loader.load('./Form Files/COMPUTER_VISION.ui', None)
@@ -29,11 +33,7 @@ class MainWindow(QMainWindow):
         self.ui.setWindowFlags(self.ui.windowFlags() & ~Qt.WindowMaximizeButtonHint)
         self.ui.show()
         self.statusbar = self.ui.statusBar()
-
-        button_list = self.ui.findChildren(QAbstractButton)
-        for button in button_list:
-            button.setEnabled(False)
-
+        self.set_button_state(False)
         self.ui.claheBtn.clicked.connect(self.toggle_clahe)
         self.ui.pftrkBtn.clicked.connect(self.toggle_particle_filter)
 
@@ -53,8 +53,7 @@ class MainWindow(QMainWindow):
         atexit.register(self.cap.release)
 
         self.setting_label.hide()
-        self.ui.claheBtn.setEnabled(True)
-        self.ui.pftrkBtn.setEnabled(True)
+        self.set_button_state(True)
 
     def setup_clahe(self):
         self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
@@ -146,7 +145,7 @@ class MainWindow(QMainWindow):
 
         if self.apply_particle_filter:
             painter = QPainter(pixmap)
-            pen = QPen(QColor(255, 0, 40, 30), 1)
+            pen = QPen(QColor(255, 0, 0, 255), 1)
             painter.setPen(pen)
 
             for particle in self.particle_filter.particles:
