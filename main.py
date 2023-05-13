@@ -39,19 +39,17 @@ class MainWindow(QMainWindow):
 
     def setup_camera(self):
         self.setting_label = QLabel(self.ui.videoLabel)
-        self.setting_label.setGeometry(QRect(0, 0, self.ui.videoLabel.width(), self.ui.videoLabel.height()))  # Adjust position and size of the QLabel
+        self.setting_label.setGeometry(QRect(0, 0, self.ui.videoLabel.width(), self.ui.videoLabel.height()))
         self.setting_label.setText("Camera Initialize...")
         self.setting_label.setAlignment(Qt.AlignCenter)
         self.setting_label.setFrameStyle(QFrame.NoFrame)
         self.setting_label.show()
         QApplication.processEvents()
-
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 10)
         atexit.register(self.cap.release)
-
         self.setting_label.hide()
         self.set_button_state(True)
 
