@@ -10,13 +10,51 @@ from PySide6.QtUiTools import QUiLoader
 from particle_filter import ParticleFilter
 
 
+class VideoProcessor:
+    def __init__(self, apply=False):
+        self.apply = apply
+
+    def toggle(self):
+        self.apply = not self.apply
+
+    def process(self, frame):
+        pass
+
+
+class ClaheProcessor(VideoProcessor):
+    def __init__(self, apply=False):
+        super().__init__(apply)
+        self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
+
+    def process(self, frame):
+        if self.apply:
+            return self.clahe.apply(frame)
+        return frame
+
+
+class ParticleFilterProcessor(VideoProcessor):
+    def __init__(self, dimensions, n_particles, apply=False):
+        super().__init__(apply)
+        self.particle_filter = ParticleFilter(n_particles, dimensions)
+
+    def process(self, frame):
+        if self.apply:
+            _, binary_frame = cv2.threshold(frame, 128, 255, cv2.THRESH_BINARY)
+            moments = cv2.moments(binary_frame)
+            if moments['m00'] > 0:
+                target = np.array([moments['m10'] / moments['m00'], moments['m01'] / moments['m00']])
+                self.particle_filter.update(target)
+            self.particle_filter.predict()
+        return frame
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setup_ui()
         self.setup_camera()
-        self.setup_clahe()
-        self.setup_particle_filter()
+        self.clahe_processor = ClaheProcessor()
+        self.particle_filter_processor = ParticleFilterProcessor((self.ui.videoLabel.width(), self.ui.videoLabel.height()), 3000)
         self.setup_font()
         self.setup_frame_update_timer()
         self.setup_fps_counter()
@@ -53,14 +91,6 @@ class MainWindow(QMainWindow):
         self.setting_label.hide()
         self.set_button_state(True)
 
-    def setup_clahe(self):
-        self.clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 6))
-        self.apply_clahe = False
-
-    def setup_particle_filter(self):
-        self.apply_particle_filter = False
-        self.particle_filter = ParticleFilter(3000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
-
     def setup_font(self):
         self.font_bold = QFont()
         self.font_bold.setBold(True)
@@ -81,9 +111,9 @@ class MainWindow(QMainWindow):
         self.timer_fps.start(10)
 
     def toggle_clahe(self):
-        self.apply_clahe = not self.apply_clahe
+        self.clahe_processor.toggle()
 
-        if self.apply_clahe:
+        if self.clahe_processor.apply:
             font = self.font_bold
         else:
             font = self.font_normal
@@ -91,9 +121,9 @@ class MainWindow(QMainWindow):
         self.ui.claheBtn.setFont(font)
 
     def toggle_particle_filter(self):
-        self.apply_particle_filter = not self.apply_particle_filter
+        self.particle_filter_processor.toggle()
 
-        if self.apply_particle_filter:
+        if self.particle_filter_processor.apply:
             font = self.font_bold
         else:
             font = self.font_normal
@@ -121,17 +151,8 @@ class MainWindow(QMainWindow):
 
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        if self.apply_clahe:
-            gray_frame = self.clahe.apply(gray_frame)
-
-        if self.apply_particle_filter:
-            _, binary_frame = cv2.threshold(gray_frame, 128, 255, cv2.THRESH_BINARY)
-            moments = cv2.moments(binary_frame)
-            if moments['m00'] > 0:
-                target = np.array([moments['m10'] / moments['m00'], moments['m01'] / moments['m00']])
-                self.particle_filter.update(target)
-
-            self.particle_filter.predict()
+        gray_frame = self.clahe_processor.process(gray_frame)
+        gray_frame = self.particle_filter_processor.process(gray_frame)
 
         self.display_image(gray_frame)
 
@@ -141,12 +162,12 @@ class MainWindow(QMainWindow):
         qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_Grayscale8)
         pixmap = QPixmap.fromImage(qimage)
 
-        if self.apply_particle_filter:
+        if self.particle_filter_processor.apply:
             painter = QPainter(pixmap)
             pen = QPen(QColor(255, 0, 0, 255), 1)
             painter.setPen(pen)
 
-            for particle in self.particle_filter.particles:
+            for particle in self.particle_filter_processor.particle_filter.particles:
                 x, y = particle.astype(int)
                 painter.drawEllipse(x, y, 1, 1)
 
