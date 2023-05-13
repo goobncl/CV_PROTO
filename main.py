@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
 
     def setup_particle_filter(self):
         self.apply_particle_filter = False
-        self.particle_filter = ParticleFilter(6000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
+        self.particle_filter = ParticleFilter(3000, (self.ui.videoLabel.width(), self.ui.videoLabel.height()))
 
     def setup_font(self):
         self.font_bold = QFont()
